@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.ColorFilter;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.drawable.Drawable;
 import android.view.MotionEvent;
 import android.widget.Button;
@@ -25,9 +26,10 @@ public class SmoochLikeChatHead extends Button {
         bitmap = BitmapFactory.decodeResource(getResources(),R.drawable.smooch_bot);
         w = bitmap.getWidth();
         h = bitmap.getHeight();
-        setWidth(w+w/3);
+        setWidth(2*w);
         setHeight(h);
         smoochChatHeadDrawable = new SmoochChatHeadDrawable();
+        setBackground(smoochChatHeadDrawable);
     }
     public void onDraw(Canvas canvas) {
         super.onDraw(canvas);
@@ -37,7 +39,7 @@ public class SmoochLikeChatHead extends Button {
                 ConversationActivity.show(getContext());
             }
             try {
-                Thread.sleep(100);
+                Thread.sleep(50);
                 invalidate();
             }
             catch (Exception ex) {
@@ -48,22 +50,32 @@ public class SmoochLikeChatHead extends Button {
     public boolean onTouchEvent(MotionEvent event) {
         if(event.getAction() == MotionEvent.ACTION_DOWN) {
             shouldUpdate = true;
+            smoochChatHeadDrawable.startMoving();
+            postInvalidate();
         }
         return true;
     }
     private class SmoochChatHeadDrawable extends Drawable {
         private int l = 0;
         private int k = 0;
+        private int dir[] = {1,-1};
         private boolean stopMoving = false;
         private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         public void draw(Canvas canvas) {
+            Path path = new Path();
             canvas.save();
-            canvas.translate(w/2,h/2);
-            canvas.drawBitmap(bitmap,-w/2-l*w/30,-h/2,paint);
-            canvas.drawBitmap(bitmap,-w/2+l*w/30,-h/2,paint);
+            canvas.translate(w,h/2);
+            for(int i=0;i<2;i++) {
+                canvas.save();
+                path.addCircle(dir[i]* l * w / 30, 0, w / 3, Path.Direction.CCW);
+                canvas.clipPath(path);
+                canvas.drawBitmap(bitmap, -w / 2+dir[i]* l * w / 30, -h / 2, paint);
+                canvas.restore();
+
+            }
             canvas.restore();
             l+=k;
-            if(l == 5) {
+            if(l == 10) {
                 k = 0;
                 stopMoving = true;
             }
